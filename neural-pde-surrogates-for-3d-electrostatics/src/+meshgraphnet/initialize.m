@@ -19,6 +19,6 @@ function p = initialize(cfg)
     p.node_encoder = meshgraphnet.initializeMLP(cfg.NodeInputSize*(2*cfg.MaxFreq+1),cfg.HiddenSize,cfg.NumLayersEncoder);
     p.edge_encoder = meshgraphnet.initializeMLP(cfg.EdgeInputSize,cfg.HiddenSize,cfg.NumLayersEncoder);
     p.processors = meshgraphnet.initializeProcessor(cfg);
-    p.node_decoder = meshgraphnet.initializeMLP(cfg.HiddenSize,cfg.OutputSize,cfg.NumLayersDecoder);
+    p.node_decoder = meshgraphnet.initializeMLP(cfg.HiddenSize,cfg.HiddenSize,cfg.NumLayersDecoder,cfg.OutputSize);
     p = dlupdate(@dlarray,p);
 end

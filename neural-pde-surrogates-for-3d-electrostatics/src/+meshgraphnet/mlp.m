@@ -31,5 +31,9 @@ function x = mlp(params,x,numLayers)
     end
     p = params.("fc_"+numLayers);
     z = pagemtimes(p.W,x) + p.b;
-    x = x+z;
+    if size(x,1) == size(z,1)
+        x = x + z;
+    else
+        x = z;
+    end
 end

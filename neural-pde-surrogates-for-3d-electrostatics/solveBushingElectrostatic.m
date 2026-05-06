@@ -1,37 +1,38 @@
 function [R,model] = solveBushingElectrostatic(nFins, finRadiusBase, finRadiusTop, finWidth, tubeRadiusBase, tubeRadiusTop, boreRadius, totalLength, options)
-%solveBushingElectrostatic Electrostatic analysis of a parametric transformer bushing.
-%   [R, model] = solveBushingElectrostatic(...) creates a parametric
-%   bushing geometry, embeds it in an air domain, applies electrostatic
-%   boundary conditions, and solves. Replicates the workflow from the
-%   MathWorks documentation example "Electrostatic Analysis of Transformer
-%   Bushing Insulator".
-%
-%   Inputs:
-%       nFins           - Number of fin-like rings
-%       finRadiusBase   - Outer radius of the first (bottom) fin
-%       finRadiusTop    - Outer radius of the last (top) fin
-%       finWidth        - Axial width of each fin
-%       tubeRadiusBase  - Tube outer radius at the bottom
-%       tubeRadiusTop   - Tube outer radius at the top
-%       boreRadius      - Inner bore radius
-%       totalLength     - Total axial length of the bushing
-%
-%   Name-Value Arguments:
-%       DoPlot          - Plot results. Default: false
-%       BushingGeometry - fegeometry object to use instead of creating the
-%                         bushing from parameters. Default: []
-%
-%   Outputs:
-%       R     - ElectrostaticResults object from solve()
-%       model - femodel object with geometry, mesh, and material properties
-%
-%   Boundary conditions:
-%       - Inner bore surface:    Voltage = 10 kV (conductor)
-%       - Flat annular ring:     Voltage = 0 V   (oil tank ground)
-%
-%   Material properties:
-%       - Air domain (Cell 1):          Relative permittivity = 1
-%       - Bushing insulator (Cell 2):   Relative permittivity = 5
+    %solveBushingElectrostatic Electrostatic analysis of a parametric transformer bushing insulator.
+    %   [R, model] = solveBushingElectrostatic(...) creates a parametric
+    %   bushing insulator geometry, embeds it in an air domain, applies boundary 
+    %   conditions, and solves. Replicates the workflow from the
+    %   documentation example https://www.mathworks.com/help/pde/ug/electrostatic-analysis-of-transformer-bushing-insulator.html
+    %
+    %   Inputs:
+    %       nFins           - Number of fin-like annular rings
+    %       finRadiusBase   - Outer radius of the first (bottom) fin
+    %       finRadiusTop    - Outer radius of the last (top) fin
+    %       finWidth        - Axial width of each fin
+    %       tubeRadiusBase  - Tube outer radius at the bottom
+    %       tubeRadiusTop   - Tube outer radius at the top
+    %       boreRadius      - Inner bore radius
+    %       totalLength     - Total axial length of the bushing insulator
+    %
+    %   Name-Value Arguments:
+    %       DoPlot          - Plot results. Default: false
+    %       BushingGeometry - fegeometry object to use instead of creating the
+    %                         bushing from parameters. Default: []
+    %
+    %   Outputs:
+    %       R     - ElectrostaticResults object from solve()
+    %       model - femodel object with geometry, mesh, and material properties
+    %
+    %   Boundary conditions:
+    %       - Inner bore surface:    Voltage = 10 kV (conductor)
+    %       - Flat annular ring:     Voltage = 0 V   (ground)
+    %
+    %   Material properties:
+    %       - Air domain (Cell 1):          Relative permittivity = 1
+    %       - Bushing insulator (Cell 2):   Relative permittivity = 5
+    
+    %   Copyright 2026 The MathWorks, Inc. 
 
     arguments
         nFins
@@ -57,7 +58,7 @@ function [R,model] = solveBushingElectrostatic(nFins, finRadiusBase, finRadiusTo
 
     %% Step 2: Create the air domain surrounding the bushing
     % Fixed-size air cuboid matching the documentation example dimensions
-    % (1, 0.4, 0.4) but with the long axis along Z to match our bushing.
+    % (1, 0.4, 0.4) but with the long axis along Z to match this example's orientation.
     % Centered in XY, translated so the bushing (Z=0 to totalLength) is
     % fully enclosed.
     gmAir = fegeometry(multicuboid(0.4, 0.4, 1));
@@ -91,7 +92,7 @@ function [R,model] = solveBushingElectrostatic(nFins, finRadiusBase, finRadiusTo
 
     % Boundary conditions
     model.FaceBC(boreFace) = faceBC(Voltage=10E3);      % 10 kV on conductor
-    model.FaceBC(annularFace) = faceBC(Voltage=0);       % ground at oil tank
+    model.FaceBC(annularFace) = faceBC(Voltage=0);      % ground 
 
     %% Step 6: Mesh and solve
     model = generateMesh(model, Hmax=0.025);

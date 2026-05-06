@@ -1,37 +1,39 @@
 function [gm, faceIDs] = createBushing(nFins, finRadiusBase, finRadiusTop, finWidth, tubeRadiusBase, tubeRadiusTop, boreRadius, totalLength)
-%createBushing Create a parametric transformer bushing geometry.
-%   [gm, faceIDs] = createBushing(nFins, finRadiusBase, finRadiusTop,
-%   finWidth, tubeRadiusBase, tubeRadiusTop, boreRadius, totalLength)
-%   creates an axisymmetric transformer bushing with nFins cooling fin
-%   rings. The fins have a raised-cosine profile and are evenly spaced.
-%   Fin radii are linearly interpolated from finRadiusBase (first fin) to
-%   finRadiusTop (last fin). The tube tapers linearly from tubeRadiusBase
-%   at Z=0 to tubeRadiusTop at Z=totalLength.
-%
-%   The geometry axis is along Z. The last (topmost) fin has a flat annular
-%   face at its peak for applying a boundary condition.
-%
-%   Inputs:
-%       nFins           - Number of cooling fin rings
-%       finRadiusBase   - Outer radius of the first (bottom) fin
-%       finRadiusTop    - Outer radius of the last (top) fin
-%       finWidth        - Axial width of each fin (full width of cosine bump)
-%       tubeRadiusBase  - Tube outer radius at Z=0 (bottom)
-%       tubeRadiusTop   - Tube outer radius at Z=totalLength (top)
-%       boreRadius      - Inner bore radius (central hole)
-%       totalLength     - Total axial length of the bushing
-%
-%   Outputs:
-%       gm      - fegeometry object
-%       faceIDs - struct with fields:
-%                   .bore        - face ID for the inner bore surface
-%                   .flatAnnular - face ID for the flat annular ring at
-%                                  the top of the last fin
+    %createBushing Create a parametric transformer bushing insulator geometry.
+    %   [gm, faceIDs] = createBushing(nFins, finRadiusBase, finRadiusTop,
+    %   finWidth, tubeRadiusBase, tubeRadiusTop, boreRadius, totalLength)
+    %   creates an axisymmetric transformer bushing with nFins annular
+    %   rings. The fins have a raised-cosine profile and are evenly spaced.
+    %   Fin radii are linearly interpolated from finRadiusBase (first fin) to
+    %   finRadiusTop (last fin). The tube tapers linearly from tubeRadiusBase
+    %   at Z=0 to tubeRadiusTop at Z=totalLength.
+    %
+    %   The geometry axis is along Z. The last (topmost) fin has a flat annular
+    %   face at its peak. The geometry is modeled after the documentation
+    %   example: https://www.mathworks.com/help/pde/ug/electrostatic-analysis-of-transformer-bushing-insulator.html
+    %
+    %   Inputs:
+    %       nFins           - Number of annular fin rings
+    %       finRadiusBase   - Outer radius of the first (bottom) fin
+    %       finRadiusTop    - Outer radius of the last (top) fin
+    %       finWidth        - Axial width of each fin (full width of cosine bump)
+    %       tubeRadiusBase  - Tube outer radius at Z=0 (bottom)
+    %       tubeRadiusTop   - Tube outer radius at Z=totalLength (top)
+    %       boreRadius      - Inner bore radius (central hole)
+    %       totalLength     - Total axial length of the bushing
+    %
+    %   Outputs:
+    %       gm      - fegeometry object representing transformer bushing insulator geometry
+    %       faceIDs - struct with fields:
+    %                   .bore        - face ID for the inner bore surface
+    %                   .flatAnnular - face ID for the flat annular ring at
+    %                                  the top of the last fin
+
+    %   Copyright 2026 The MathWorks, Inc.
 
     %% Compute fin positions and radii
-    % Asymmetric margins: larger at the bottom, small stub at the top.
-    % endStub is the distance from the last fin CENTER to the top of the
-    % bushing — this is the visible tube length above the split face.
+    % endStub is the distance from the last fin center to the top of the
+    % bushing.
     endStub = 0.06 * totalLength;  % short tube stub above the last fin peak
     startMargin = 0.12 * totalLength;  % longer tube section at the bottom
     finPositions = linspace(startMargin + finWidth/2, ...
@@ -72,18 +74,18 @@ function [gm, faceIDs] = createBushing(nFins, finRadiusBase, finRadiusTop, finWi
         rFin = localTubeR + 0.5 .* bumpHeight .* ...
                (1 + cos(pi * (zFin - center) / hw));
 
-        z_all = [z_all, zFin]; %#ok<AGROW>
-        r_all = [r_all, rFin]; %#ok<AGROW>
+        z_all = [z_all, zFin]; 
+        r_all = [r_all, rFin]; 
 
-        % Tube section after this fin
+        % Tube section after ith fin
         if i < nFins
             zTube = linspace(center + hw + 0.002, ...
                              finPositions(i+1) - hw - 0.002, 3);
         else
             zTube = linspace(center + hw + 0.002, totalLength, 3);
         end
-        z_all = [z_all, zTube]; %#ok<AGROW>
-        r_all = [r_all, tubeRadiusAt(zTube)]; %#ok<AGROW>
+        z_all = [z_all, zTube]; 
+        r_all = [r_all, tubeRadiusAt(zTube)]; 
     end
 
     % Remove duplicates and sort
@@ -115,7 +117,7 @@ function [gm, faceIDs] = createBushing(nFins, finRadiusBase, finRadiusTop, finWi
     bore = fegeometry(multicylinder(boreRadius, totalLength));
     gm = subtract(gm, bore);
 
-    %% Find face IDs programmatically
+    %% Find face IDs for applying boundary conditions programmatically using nearestFace
     z_split = z_all(splitIdx);
     mid_r = (localTubeAtSplit + r_all(splitIdx)) / 2;
     faceIDs.flatAnnular = nearestFace(gm, [mid_r, 0, z_split]);
@@ -123,17 +125,16 @@ function [gm, faceIDs] = createBushing(nFins, finRadiusBase, finRadiusTop, finWi
 
 end
 
-
 function tri = revolveProfile(rProfile, zProfile, nAngles)
-%revolveProfile Create a triangulated solid of revolution.
-%   tri = revolveProfile(rProfile, zProfile) revolves the closed 2D
-%   polygon defined by (rProfile, zProfile) around the Z axis to produce
-%   a closed triangulated surface mesh. rProfile contains radial
-%   coordinates (>= 0) and zProfile contains axial coordinates.
-%   Vertices with r ≈ 0 are treated as on-axis pole points.
-%
-%   tri = revolveProfile(rProfile, zProfile, nAngles) specifies the
-%   number of angular divisions (default: 72, i.e. 5-degree steps).
+    %revolveProfile Create a triangulated solid of revolution.
+    %   tri = revolveProfile(rProfile, zProfile) revolves the closed 2D
+    %   polygon defined by (rProfile, zProfile) around the Z axis to produce
+    %   a closed triangulated surface mesh. rProfile contains radial
+    %   coordinates (>= 0) and zProfile contains axial coordinates.
+    %   Vertices with r ≈ 0 are treated as on-axis pole points.
+    %
+    %   tri = revolveProfile(rProfile, zProfile, nAngles) specifies the
+    %   number of angular divisions (default: 72, i.e. 5-degree steps).
 
     if nargin < 3
         nAngles = 72;

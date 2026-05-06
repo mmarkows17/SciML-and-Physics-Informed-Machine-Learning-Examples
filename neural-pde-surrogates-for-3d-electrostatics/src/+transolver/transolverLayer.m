@@ -1,4 +1,26 @@
 function layer = transolverLayer(hiddenSize,numSlices,numHeads,args)
+% transolverLayer Create a Transolver physics-attention layer as a networkLayer.
+%
+%   layer = transolver.transolverLayer(hiddenSize, numSlices, numHeads)
+%   constructs a single Transolver attention block that computes slice 
+%   representations, applies self-attention across slices, and maps back 
+%   to per-node features.
+%
+%   Inputs:
+%       hiddenSize - Hidden feature dimension.
+%       numSlices  - Number of physics slices.
+%       numHeads   - Number of attention heads.
+%
+%   Name-Value Arguments:
+%       Name               - Layer name. Default: ""
+%       IncludeTemperature - Include learnable temperature scaling.
+%                            Default: false
+%
+%   Output:
+%       layer - A networkLayer wrapping the Transolver attention block.
+
+%   Copyright 2026 The MathWorks, Inc.
+
 arguments
     hiddenSize (1,1) {mustBePositive,mustBeInteger}
     numSlices (1,1) {mustBePositive,mustBeInteger}

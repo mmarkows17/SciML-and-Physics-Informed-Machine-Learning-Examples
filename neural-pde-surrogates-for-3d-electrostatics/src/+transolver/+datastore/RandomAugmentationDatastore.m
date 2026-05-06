@@ -1,5 +1,19 @@
 classdef RandomAugmentationDatastore < matlab.io.Datastore & ...
           matlab.io.datastore.Subsettable
+  % RandomAugmentationDatastore Datastore that applies random rotations and reflections.
+  %
+  %   ds = transolver.datastore.RandomAugmentationDatastore(inputFeatures)
+  %   creates a datastore that applies random augmentations to
+  %   3-D input features on each read. Augmentations include random
+  %   rotation around the Z-axis and random reflection across X, which are
+  %   valid for axisymmetric geometries.
+  %
+  %   Input:
+  %       inputFeatures - 3-D array of size C-by-N-by-NumSamples, where
+  %                       the first three channels are spatial coordinates.
+
+  %   Copyright 2026 The MathWorks, Inc.
+
   properties
       InputFeatures
       Index

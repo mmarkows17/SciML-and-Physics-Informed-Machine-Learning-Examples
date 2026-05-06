@@ -1,11 +1,18 @@
 function x = fourierPositionalEmbedding(x,maxfreq)
-    % This function extends an input x with "Fourier features", 
-    % cos(f*x) and sin(f*x) 
-    % for frequencies f = 1:maxfreq.
+    % fourierPositionalEmbedding Augment features with Fourier positional embeddings.
     %
-    % There's various references to this sort of thing in literature. 
+    %   x = meshgraphnet.fourierPositionalEmbedding(x, maxfreq) appends
+    %   cos(f*pi*x) and sin(f*pi*x) for frequencies f = 1:maxfreq to the
+    %   input features. The output has size (2*maxfreq+1)*C-by-N.
     %
-    % Assume x is CxN and in [-1,1]
+    %   Inputs:
+    %       x       - Feature matrix of size C-by-N with values in [-1,1].
+    %       maxfreq - Maximum frequency for the Fourier embedding.
+    %
+    %   Output:
+    %       x - Augmented feature matrix of size C*(2*maxfreq+1)-by-N.
+
+    %   Copyright 2026 The MathWorks, Inc.
     f = x*pi;
     F = permute(1:maxfreq,[1,3,2]);
     f = f.*F;

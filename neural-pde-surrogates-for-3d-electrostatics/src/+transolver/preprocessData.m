@@ -1,4 +1,24 @@
 function [inputs,targets,efieldTargets] = preprocessData(data,stride)
+    % preprocessData Extract and stride input, potential, and E-field data.
+    %
+    %   [inputs, targets, efieldTargets] = transolver.preprocessData(data,
+    %   stride) extracts coordinate and material inputs, electric potential
+    %   targets, and electric field targets from a struct array of
+    %   simulation data. Nodes with NaN values are removed and the
+    %   remaining nodes are subsampled by stride.
+    %
+    %   Inputs:
+    %       data   - Struct array with fields Coord, Epsilon, Potential,
+    %                and ElectricField.
+    %       stride - Subsampling stride for node selection.
+    %
+    %   Outputs:
+    %       inputs       - Cell array of input matrices (4-by-Ni each).
+    %       targets      - Cell array of potential target vectors (1-by-Ni).
+    %       efieldTargets - Cell array of E-field matrices (3-by-Ni).
+    
+    %   Copyright 2026 The MathWorks, Inc.
+    
     inputs = cell(numel(data),1);
     targets = cell(numel(data),1);
     efieldTargets = cell(numel(data),1);
@@ -9,13 +29,13 @@ function [inputs,targets,efieldTargets] = preprocessData(data,stride)
                 data.Coord,...
                 data.Epsilon');
 
-            % target is the potential
+            % electric potential target
             target = data.Potential';
 
             % electric field target (3 x N)
             efield = data.ElectricField;
 
-            % Find any nodes with a NaN input, target, or E-field. Remove them.
+            % Find any nodes with a NaN input, target, or E-field and remove
             nanInput = isnan(input);
             nanTarget = isnan(target);
             nanEfield = isnan(efield);

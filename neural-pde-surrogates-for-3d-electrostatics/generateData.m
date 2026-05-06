@@ -1,7 +1,7 @@
 %[text] # Generate Training Data (Geometry + 3D Simulation Dataset)
 %[text] This script generates a paired dataset of **3D geometries** and **corresponding electrostatic simulation results** on those geometries for training and evaluating a deep learning surrogate model. 
 %[text] Each sample consists of:
-%[text] - A parameterized transformer bushing insulator-like geometry (***Note***\*: the geometry parameters are only used to procedurally generate CAD geometry files and ensure reproducibility of the dataset. They are not provided as inputs to the surrogate model during training or inference. This mimics a common scenario where you may have access to the CAD geometry files, but no underlying parametric description of how those shapes were created.\*)
+%[text] - A parameterized transformer bushing insulator-like geometry (***Note***: the geometry parameters are only used to procedurally generate CAD geometry files and ensure reproducibility of the dataset. They are not provided as inputs to the surrogate model during training or inference. This mimics a common scenario where you may have access to the CAD geometry files, but no underlying parametric description of how those shapes were created.)
 %[text] - A finite element solution of the electrostatic potential field and the derived electric field
 %[text] - Per-node material properties
 %[text] - Mesh information  \
@@ -9,7 +9,7 @@
 %[text] The data generation takes several minutes to complete (~5 minutes using Parallel pool with 8 workers). 
 N = 75; % number of geometries to generate
 
-% Folders where we will store the generated data
+% Folders where generated data will be stored
 projectRoot = findProjectRoot("startup.m");
 stldir = fullfile(projectRoot,"STL");
 datadir = fullfile(projectRoot,"data");
@@ -37,7 +37,7 @@ tubeRadTopRange  = [0.045, 0.065]; % meters (tube top)
 % Fixed parameters
 boreRadius  = 0.015;
 totalLength = 0.6;
-%[text] Generate the bushing parameters using (LHS). Uses [lhsdesign](https://www.mathworks.com/help/releases/R2026a/stats/lhsdesign.html?searchPort=58037) from Statistics and Machine Learning Toolbox™.  
+%[text] Generate the bushing parameters using LHS. Uses [lhsdesign](https://www.mathworks.com/help/releases/R2026a/stats/lhsdesign.html?searchPort=58037) from Statistics and Machine Learning Toolbox™.  
 rng(42)  % reproducibility
 lhs = lhsdesign(N, 6);
 
@@ -54,7 +54,7 @@ finRadTopAll = max(finRadTopAll, finRadBaseAll + 0.01);
 % Ensure tube top >= tube base
 tubeRadTopAll = max(tubeRadTopAll, tubeRadBaseAll);
 %%
-%[text] Construct and export the geometries. Construct each geometry using primitive operations and Booleans. See `createBushing.m` for the geometry construction. 
+%[text] Construct and export the geometries. Construct each geometry using primitive and Boolean operations. See `createBushing.m` for the geometry construction. 
 %[text] After the geometry is created, it is meshed and its surface triangulation is extracted. These triangulations are saved as STL files. 
 geometries = cell(N, 1);
 faceIDsAll = cell(N, 1);
@@ -85,7 +85,7 @@ parfor i = 1:N %[output:group:7298d8dd] %[output:4e79d9bc]
     stlwrite(TR,filename);
 end %[output:group:7298d8dd]
 %%
-%[text] Save the parameters to a table. 
+%[text] Save the parameters to a table for reproducibility. 
 params = table(nFinsAll, finRadBaseAll, finRadTopAll, finWidthAll, ...
     tubeRadBaseAll, tubeRadTopAll, ...
     repmat(boreRadius, N, 1), repmat(totalLength, N, 1), ...
@@ -94,7 +94,7 @@ params = table(nFinsAll, finRadBaseAll, finRadTopAll, finWidthAll, ...
 save("bushingParams.mat", "params")
 fprintf('\nSaved %d parameter sets to bushingParams.mat\n', N); %[output:2096060e]
 %%
-%[text] Create one extra "inference-only" geometry with no simulation data, to demonstrate how the AI model can be used to make inference on new designs for which no high-fidelity simulation data exists. 
+%[text] Create one extra "inference-only" geometry with no associated simulation data, to demonstrate how the AI model can be used to make inference on new designs for which no high-fidelity simulation data exists. 
 rng(2); % for reproducibility
 nFinsTest = randi(nFinsRange);
 finRadBaseTest = (finRadBaseRange(2)-finRadBaseRange(1))*rand(1) + finRadBaseRange(1);
@@ -128,13 +128,13 @@ TR = triangulation(f, v);
 stlwrite(TR,filename);
 %%
 %[text] ## Generate CAE data (electrostatic simulation)
-%[text] For each geometry, a 3D electrostatic finite element simulation is performed with PDE Toolbox. The experimental setup follows the documentation example [Electrostatic Analysis of Transformer Bushing Insulator](https://www.mathworks.com/help/pde/ug/electrostatic-analysis-of-transformer-bushing-insulator.html). 
+%[text] For each geometry, a 3D electrostatic finite element simulation is performed with PDE Toolbox. The simulation setup follows the documentation example [Electrostatic Analysis of Transformer Bushing Insulator](https://www.mathworks.com/help/pde/ug/electrostatic-analysis-of-transformer-bushing-insulator.html). 
 %[text] In the simulation setup, we embed the insulator geometry in a surrounding air volume. The materials used are:
 %[text] - Air (relative permittivity = 1)
 %[text] - Insulator (relative permittivity = 5) \
 %[text] The boundary conditions used are: 
 %[text] - Fixed high voltage applied to the inner bore surface,
-%[text] - Ground applied to the flat annular ring.  \
+%[text] - Ground applied to the topmost, flat annular ring.  \
 %[text] To automate application of the boundary conditions, we identify the faces using [`nearestFace`](https://www.mathworks.com/help/pde/ug/discretegeometry.nearestface.html). For the full electrostatic simulation, see `solveBushingElectrostatic.m`.
 %[text] For each geometry, the following simulation data is saved to a `.mat` file:
 %[text] - Nodal coordinates (3xN array)

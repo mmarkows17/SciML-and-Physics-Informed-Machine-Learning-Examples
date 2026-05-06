@@ -3,7 +3,7 @@
 This demo shows how neural partial differential equation (PDE) surrogates can accelerate design exploration for a 3D electrostatics problem. 
 The goal is to predict the electric potential field throughout a transformer bushing insulator, 
 a cylindrical component with fins that provides electrical insulation between a high-voltage conductor and a grounded enclosure, 
-for varying bushing geometries. Two deep learning architectures are trained on finite element analysis (FEA) simulations to learn this mapping directly from geometry, enabling rapid evaluation of new designs without running a full simulation.
+for varying bushing insulator geometries. Two deep learning architectures are trained on finite element analysis (FEA) simulations to learn this mapping directly from geometry, enabling rapid evaluation of new designs without running a full simulation.
 
 ## Architectures
 
@@ -19,7 +19,7 @@ Both architectures output the electric potential at every input node.
 The problem setup follows the documentation example [Electrostatic Analysis of Transformer Bushing Insulator](https://www.mathworks.com/help/pde/ug/electrostatic-analysis-of-transformer-bushing-insulator.html). 
 Boundary conditions are held fixed; only the transformer bushing insulator geometry varies between samples.
 
-The training dataset consists of 75 electrostatic simulations, each on a different procedurally generated transformer bushing geometry. For each simulation, we extract:
+The training dataset consists of 75 electrostatic simulations, each on a different procedurally generated transformer bushing insulator geometry. For each simulation, we extract:
 - FEA mesh nodes and element connectivity
 - Material properties (relative permittivity at each node)
 - Electric potential at each node
@@ -27,7 +27,7 @@ The training dataset consists of 75 electrostatic simulations, each on a differe
 
 ## Results
 
-Below are example predictions from two trained models on two geometries.
+Below are example predictions from two trained models on two different geometries.
 
 **Transolver** predictions:
 ![Transolver prediction on bushing geometry 39: side-by-side comparison of FEA solution, AI prediction with 2.8% relative L2 error, and relative error map](README_media/transolver_test_39.png)
@@ -40,20 +40,27 @@ Below are example predictions from two trained models on two geometries.
 ![MeshGraphNet prediction on bushing geometry 57: side-by-side comparison of FEA solution, AI prediction with 2.2% relative L2 error, and relative error map](README_media/meshgraphnet_test_57.png)
 
 
-# Getting Started
+## Examples
+
+To see the full walkthroughs without running any code, open the links below:
+
+- [Electrostatics Using Transolver](doc/electrostaticsUsingTransolver.md)
+- [Electrostatics Using MeshGraphNet](doc/electrostaticsUsingMeshGraphNet.md)
+
+## Getting Started
 
 **Setup:**
 - Run [startup.m](startup.m) to set the MATLAB path. This also creates the `data/`, `STL/`, and `results/` subdirectories.
 
 **Data generation:**
-- Run [generate\_data.m](generate_data.m) to generate the training dataset (~5 minutes with 8 parallel workers). This saves simulation results to `data/` and STL geometry files to `STL/`.
+- Run [generateData.m](generateData.m) to generate the training dataset (~5 minutes with 8 parallel workers). This saves simulation results to `data/` and STL geometry files to `STL/`.
 
 **Training:**
-- **Transolver:** Run [transolver\_script.m](transolver_script.m) (includes optional gradient regularization fine-tuning).
-- **MeshGraphNet:** Run [meshgraphnet\_script.m](meshgraphnet_script.m).
+- **Transolver:** Run [electrostaticsUsingTransolver.m](electrostaticsUsingTransolver.m) (includes optional gradient regularization fine-tuning).
+- **MeshGraphNet:** Run [electrostaticsUsingMeshGraphNet.m](electrostaticsUsingMeshGraphNet.m).
 - Set `doTrain = true` to train from scratch (GPU recommended). The trained model is saved to `results/`.
 - Set `doTrain = false` and specify a filename in `loadFile` to load a pretrained model.
-- Set `doFinetune = true` to finetune a trained model with gradient regularization. This adds a loss term that penalizes discrepancies between the predicted electric field $-\nabla V$ and the reference FEA electric field, where the spatial gradients are computed via automatic differentiation. This encourages spatially smooth predictions and improves derived electric field accuracy (Transolver only).
+- Set `doFinetune = true` to finetune a trained model with gradient regularization. This adds a loss term that penalizes discrepancies between an autodiff-derived approximation of $-\nabla V$ and the reference FEA electric field (Transolver only).
 
 **Inference app:**
 - Type `NeuralPDEInferenceApp` in the Command Window.
@@ -62,13 +69,13 @@ Below are example predictions from two trained models on two geometries.
 - Click "Predict!" to display the predicted electric potential.
 - Toggle the switch to view electric field magnitude, which is numerically derived from the predicted potential.
 
-# Required Products
+## Required Products
 - MATLAB&reg; (tested on R2026a)
 - PDE Toolbox&trade;
 - Deep Learning Toolbox&trade;
 - Parallel Computing Toolbox&trade;
 - Statistics and Machine Learning Toolbox&trade;
 
-# References
+## References
 1. Wu, Haixu, Huakun Luo, Haowen Wang, Jianmin Wang, and Mingsheng Long. "Transolver: A Fast Transformer Solver for PDEs on General Geometries." arXiv, June 1, 2024. https://arxiv.org/abs/2402.02366. 
 2. Pfaff, Tobias, Meire Fortunato, Alvaro Sanchez-Gonzalez, and Peter W. Battaglia. "Learning Mesh-Based Simulation with Graph Networks."  arXiv, June 18, 2021. https://arxiv.org/abs/2010.03409. 

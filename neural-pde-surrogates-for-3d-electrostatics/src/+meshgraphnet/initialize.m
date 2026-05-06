@@ -1,9 +1,24 @@
 function p = initialize(cfg)
-    % Initialization function for the mgn.
+    % initialize Initialize all learnable parameters for a MeshGraphNet.
     %
-    % cfg is a struct of configuration data.
-    p.node_encoder = meshgraphnet.initialize_mlp(cfg.NodeInputSize*(2*cfg.MaxFreq+1),cfg.HiddenSize,cfg.NumLayersEncoder);
-    p.edge_encoder = meshgraphnet.initialize_mlp(cfg.EdgeInputSize,cfg.HiddenSize,cfg.NumLayersEncoder);
-    p.processors = meshgraphnet.initialize_processor(cfg);
-    p.node_decoder = meshgraphnet.initialize_mlp(cfg.HiddenSize,cfg.OutputSize,cfg.NumLayersDecoder);
+    %   p = meshgraphnet.initialize(cfg) creates and returns a struct of
+    %   dlarray parameters for the full MeshGraphNet, including node
+    %   encoder, edge encoder, message-passing processors, and node decoder.
+    %
+    %   Input:
+    %       cfg - Configuration struct with fields NodeInputSize,
+    %             EdgeInputSize, HiddenSize, OutputSize, MaxFreq,
+    %             NumLayersEncoder, NumLayersProcessor, NumLayersDecoder,
+    %             and NumProcessors.
+    %
+    %   Output:
+    %       p - Struct of dlarray parameters with fields node_encoder,
+    %           edge_encoder, processors, and node_decoder.
+
+    %   Copyright 2026 The MathWorks, Inc.
+    p.node_encoder = meshgraphnet.initializeMLP(cfg.NodeInputSize*(2*cfg.MaxFreq+1),cfg.HiddenSize,cfg.NumLayersEncoder);
+    p.edge_encoder = meshgraphnet.initializeMLP(cfg.EdgeInputSize,cfg.HiddenSize,cfg.NumLayersEncoder);
+    p.processors = meshgraphnet.initializeProcessor(cfg);
+    p.node_decoder = meshgraphnet.initializeMLP(cfg.HiddenSize,cfg.OutputSize,cfg.NumLayersDecoder);
+    p = dlupdate(@dlarray,p);
 end

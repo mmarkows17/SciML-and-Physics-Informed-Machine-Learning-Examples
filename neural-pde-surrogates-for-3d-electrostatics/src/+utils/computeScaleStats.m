@@ -1,4 +1,4 @@
-function [offset,scale] = computeScaleStats(data, rangeSpec, varargin)
+function [offset,scale] = computeScaleStats(data, rangeSpec, nvargs)
 %computeScaleStats Compute row-wise scaling statistics for [0,1] or [-1,1].
 %   [offset, scale] = computeScaleStats(data, rangeSpec) computes per-row
 %   offset and scale so that scaled = (data - offset) ./ scale maps each
@@ -19,13 +19,15 @@ function [offset,scale] = computeScaleStats(data, rangeSpec, varargin)
 %   Note: 'zero-center-uniform' sets offset to 0 and uses a uniform scale
 %   factor across coordinate rows to preserve aspect ratio.
 
-p = inputParser;
-addParameter(p, 'CoordIdx', [], @(x) isnumeric(x));
-addParameter(p, 'CoordPolicy', 'none', @(s) ismember(s, {'none','zero-center-uniform'}));
-parse(p, varargin{:});
+arguments
+    data
+    rangeSpec
+    nvargs.CoordIdx {mustBeNumeric} = []
+    nvargs.CoordPolicy {mustBeMember(nvargs.CoordPolicy,{'none','zero-center-uniform'})} = 'none'
+end
 
-coordIdx   = p.Results.CoordIdx;
-coordPol   = p.Results.CoordPolicy;
+coordIdx   = nvargs.CoordIdx;
+coordPol   = nvargs.CoordPolicy;
 
 % Concatenate training samples along columns
 if iscell(data)
@@ -34,7 +36,7 @@ else
     allMat = data;              % [D x N]
 end
 
-% Concatenate training samples along columns
+% Compute row-wise min and max
 rowMin = min(allMat, [], 2);
 rowMax = max(allMat, [], 2);
 
@@ -43,7 +45,7 @@ case '[0,1]'
     offset = rowMin;
     scale  = rowMax - rowMin;
 case '[-1,1]'
-    offset = 0.5 * (rowMin + rowMax);          % midrange
+    offset = 0.5 * (rowMin + rowMax); % midrange
     scale  = 0.5 * (rowMax - rowMin); % half-range
 otherwise
     error('rangeSpec must be "[0,1]" or "[-1,1]".');
